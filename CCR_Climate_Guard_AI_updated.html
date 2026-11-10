@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CCR — Collateral Climate Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f7f5f0;--card:#fff;--ink:#14213d;--muted:#5b6472;--line:#e2ded4;--teal:#0f7c7a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101826;--card:#162132;--ink:#e8edf4;--muted:#9aa6b6;--line:#2a3649;--teal:#3fb5b1}}
+:root[data-theme="dark"]{--bg:#101826;--card:#162132;--ink:#e8edf4;--muted:#9aa6b6;--line:#2a3649;--teal:#3fb5b1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans","IBM Plex Sans Arabic",system-ui,sans-serif}
+[dir=rtl] body{font-family:"IBM Plex Sans Arabic","IBM Plex Sans",system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{font-size:20px;font-weight:700;letter-spacing:.04em}.brand b{color:var(--teal)}
+.brand small{font-size:13px;font-weight:400;color:var(--muted);margin-inline-start:8px}
+.bar-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.disc{margin:10px 18px 0;padding:8px 12px;border-inline-start:3px solid #7a5fa8;background:var(--card);font-size:13px;color:var(--muted)}
+main{max-width:1280px;margin:auto;padding:14px 18px 40px}
+.panel{display:none}.panel.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.kpi,.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi span{display:block;font-size:13px;color:var(--muted)}
+.kpi strong{font-size:22px;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.row3{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;margin-top:12px}
+@media (max-width:820px){.row,.row3{grid-template-columns:1fr}}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.bar span{min-width:120px}.bar i{height:10px;border-radius:4px;display:inline-block}
+.bar em{font-style:normal;margin-inline-start:auto;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+.scroll{overflow-x:auto}
+svg text{font:11px "IBM Plex Sans",system-ui,sans-serif;fill:var(--muted)}
+.leg{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.leg span{display:inline-flex;gap:5px;align-items:center}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%}
+.muted{color:var(--muted);font-size:13px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chips button{font-size:12px;padding:4px 9px}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;margin:6px 0}
+.m{padding:8px 11px;border-radius:9px;max-width:92%;white-space:pre-wrap}
+.m.u{background:var(--teal);color:#fff;align-self:flex-end}.m.a{background:var(--bg);border:1px solid var(--line)}
+.ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:4px}
+input[type=range]{width:100%;accent-color:var(--teal)}
+.stage,.pn{display:none}
+.pres .stage,.pres .pn{display:inline-block}
+.pres .panel:not(.on){display:none!important}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<style>
+#map{width:100%;height:560px;min-height:420px;border-radius:9px;z-index:1;background:#dce6e4}
+.leaflet-container{font:13px "IBM Plex Sans",sans-serif}
+#p-collateral .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+#p-collateral table td{white-space:nowrap}
+#p-collateral .table-wrap{max-height:620px;overflow:auto}
+#p-collateral thead{position:sticky;top:0;background:var(--card);z-index:2}
+@media(max-width:650px){#map{height:430px;min-height:350px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">CC<b>R</b><small id="ttl">Collateral Climate Radar</small></div>
+ <nav class="bar-row" id="nav"></nav>
+ <div class="bar-row">
+  <span class="stage" id="stage"></span>
+  <button class="pn" id="pv">Previous</button><button class="pn" id="nx">Next</button>
+  <button id="theme">Dark mode</button><button id="pres">Presenter</button><button id="lang">العربية</button><button id="reset">Reset</button>
+ </div>
+</header>
+<p class="disc" id="disc">Illustrative demonstration: fictional portfolio and hypothetical hazard data. Not a flood forecast or official regulatory assessment. Designed to align with Central Bank climate financial risk management principles. Formal regulatory compliance requires independent legal and compliance review.</p>
+<main>
+<section class="panel" id="p-dash">
+ <div class="kpis" id="kpis"></div>
+ <p class="muted" id="insight" style="margin:12px 2px 0"></p>
+ <div class="row">
+  <div class="box"><strong>Risk distribution</strong><div id="dist" style="margin-top:6px"></div></div>
+  <div class="box"><strong>Exposure by emirate (AED M)</strong><div id="byem" style="margin-top:6px"></div></div>
+ </div>
+ <div class="row">
+  <div class="box"><strong>Assessment coverage and data quality</strong><div id="cov" style="margin-top:6px"></div></div>
+  <details class="box" id="assm"><summary><strong>Assumptions and limitations</strong></summary>
+   <ul class="muted" style="margin:8px 0 0;padding-inline-start:18px">
+    <li>Borrowers, loans and valuations are fictional.</li>
+    <li>Hazard values and risk zones are simulated demonstration inputs. No external hazard data source is used.</li>
+    <li>Scores come from transparent demonstration rules, not validated models or flood forecasts.</li>
+    <li>Locations are approximate district centres with small offsets. They are not survey-verified or checked against land boundaries.</li>
+    <li>Unknown data is never scored as low risk. Not Evaluated assets carry no risk category.</li>
+    <li>Loan exposure is the outstanding fictional loan. Collateral valuation is the estimated property value. They are different measures.</li>
+   </ul>
+  </details>
+ </div>
+</section>
+<section class="panel" id="p-map">
+ <div class="row3">
+  <div class="box">
+   <div class="tools" style="margin-bottom:8px"><select id="emsel" aria-label="Emirate"></select><input id="q" placeholder="Search Collateral ID" aria-label="Search by Collateral ID"><button id="back">Back to UAE</button></div>
+   <p class="muted" style="margin:0 0 6px">HYPOTHETICAL HAZARD ZONES — DEMONSTRATION DATA. Stylized outline, not to scale.</p>
+   <div id="map" role="application" aria-label="Interactive satellite map of UAE collateral assets"></div>
+    <p class="muted" id="mapNote">Satellite imagery © Esri and its contributors. Imagery requires an internet connection. Asset coordinates are fictional demonstration points.</p>
+   <div class="leg">
+    <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#14213d"/></svg>Evaluated</span>
+    <span><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="#14213d"/></svg>Not Evaluated</span>
+    <span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" fill="#14213d" transform="rotate(45 6 6)"/></svg>Unknown / Missing Data</span>
+    <span><i class="sw" style="background:#5b8c5a"></i>Low</span>
+    <span><i class="sw" style="background:#c7892b"></i>Medium</span>
+    <span><i class="sw" style="background:#b5483f"></i>High</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#14213d" stroke-dasharray="2 2"/></svg>Approximate location</span>
+    <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#7a5fa8" stroke-dasharray="4 3"/></svg>Hypothetical hazard zone</span>
+   </div>
+  </div>
+  <div class="box" id="card"></div>
+ </div>
+</section>
+<section class="panel" id="p-collateral">
+ <div class="box">
+  <div class="tools" style="justify-content:space-between;margin-bottom:10px">
+   <div><strong id="collTitle">Collateral register</strong><p class="muted" id="collDesc">Complete fictional collateral inventory. Export the current dataset to CSV.</p></div>
+   <button id="csv" class="on">Download CSV</button>
+  </div>
+  <div class="filters">
+   <input id="collSearch" placeholder="Search ID, owner, district or property type" style="flex:1;min-width:220px">
+   <select id="collEm"><option value="All">All emirates</option></select>
+   <select id="collStatus"><option value="All">All assessment statuses</option><option>Evaluated</option><option>Not Evaluated</option><option>Unknown</option></select>
+  </div>
+  <p class="muted" id="collCount"></p>
+  <div class="table-wrap scroll"><table id="collTable"></table></div>
+ </div>
+</section>
+<section class="panel" id="p-sim">
+ <div class="box">
+  <strong>Illustrative Climate Scenario Analysis</strong>
+  <p class="muted">Rainfall intensity sets a demonstration hazard multiplier. Every page updates at once.</p>
+  <input type="range" id="lv" min="1" max="5" step="1" value="3" aria-label="Rainfall intensity level, 1 to 5" style="margin-top:10px">
+  <div class="ticks"><span>1 Very Low</span><span>2 Low</span><span>3 Moderate</span><span>4 High</span><span>5 Very High</span></div>
+  <p id="lvtxt" style="margin:10px 0 0"></p>
+ </div>
+ <div class="kpis" id="simk" style="margin-top:12px"></div>
+ <p class="muted" id="simx" style="margin-top:12px"></p>
+</section>
+<section class="panel" id="p-risk">
+ <div class="box">
+  <div class="tools" style="margin-bottom:8px"><select id="rem" aria-label="Emirate filter"></select><select id="rcat" aria-label="Risk category filter"></select></div>
+  <p class="muted">Top 10 ranked by risk score (highest first), then by loan exposure. Loan exposure is the outstanding loan. Valuation is the estimated property value.</p>
+  <div class="scroll"><table id="top"></table></div>
+ </div>
+</section>
+<section class="panel" id="p-ai">
+ <div class="row">
+  <div class="box">
+   <strong>CCR Intelligence</strong>
+   <div class="chips" id="chips"></div>
+   <div class="chat" id="chat"></div>
+   <div class="tools"><input id="ask" style="flex:1;min-width:180px" placeholder="Ask in English or Arabic" aria-label="Ask CCR Intelligence"><button id="send">Send</button></div>
+  </div>
+  <div class="box">
+   <strong>Portfolio PNG report</strong>
+   <p class="muted">Built from the current scenario, the map legend and the dataset.</p>
+   <div class="tools" style="margin-top:8px"><button id="gen">Generate risk report</button><button id="dl" hidden>Download PNG</button></div>
+   <p class="muted" id="st" style="margin-top:8px"></p>
+   <img id="prev" alt="Preview of the generated portfolio risk report" style="display:none;width:100%;margin-top:8px;border-radius:8px;border:1px solid var(--line)">
+  </div>
+ </div>
+</section>
+<section class="panel" id="p-audit">
+ <div class="box">
+  <div class="tools" style="margin-bottom:8px"><select id="af" aria-label="Filter by action"></select></div>
+  <p class="muted">Demonstration audit log built from actual interactions. Not a production-grade immutable regulatory audit system.</p>
+  <div class="scroll"><table id="logt"></table></div>
+ </div>
+</section>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+var MULT=[0.6,0.8,1,1.2,1.4],LVN=['Very Low','Low','Moderate','High','Very High'];
+var EM=['Dubai','Abu Dhabi','Sharjah','Ras Al Khaimah'];
+var EMC={'Dubai':[55.25,25.15],'Abu Dhabi':[54.5,24.45],'Sharjah':[55.42,25.33],'Ras Al Khaimah':[55.85,25.75]};
+var DIST=[['Dubai','Downtown Dubai',25.1972,55.2744],['Dubai','Business Bay',25.1866,55.265],['Dubai','Al Barsha',25.112,55.2],['Dubai','Jumeirah Village Circle',25.06,55.21],['Abu Dhabi','Khalifa City',24.419,54.58],['Abu Dhabi','Mohammed Bin Zayed City',24.36,54.54],['Sharjah','Al Nahda',25.293,55.37],['Sharjah','Muwaileh',25.305,55.458],['Ras Al Khaimah','Al Nakheel',25.79,55.95],['Ras Al Khaimah','Al Dhait',25.755,55.945]];
+var TYPES=['Residential Apartment','Residential Villa','Commercial Building','Retail Property','Industrial Property','Mixed-Use Property'];
+var UAE=[[51.6,24.1],[52.4,24.2],[53.2,24.1],[53.8,24.1],[54.3,24.2],[54.7,24.4],[55,24.9],[55.2,25.1],[55.6,25.3],[55.9,25.8],[56.1,25.9],[56.3,25.6],[56.4,25.1],[56.4,24.8],[56.1,24.2],[56,23.8],[55.6,23],[55.3,22.7],[54.9,22.7],[54.5,23.2],[54,23.6],[53.2,23.6],[52.6,23.1],[52,23],[51.6,23.6]];
+var COL={'Low':'#5b8c5a','Medium':'#c7892b','High':'#b5483f','Not Assessed':'#8b8f96','Unknown':'#7a5fa8'};
+var ACTIONS=['Dashboard Viewed','Map Opened','Collateral Selected','Filter Changed','Scenario Updated','AI Question Submitted','Report Generated','Report Downloaded','Assumptions Viewed','Presenter Mode Activated','Application Reset'];
+var TABS=[['dash','Dashboard','لوحة القيادة'],['map','UAE map','الخريطة'],['collateral','Collateral register','سجل الضمانات'],['sim','Flood scenario','محاكاة الفيضان'],['risk','Risk analysis','تحليل المخاطر'],['ai','AI & report','المساعد والتقرير'],['audit','Audit','سجل التدقيق']];
+var CHIPS=['Total number of collateral assets','How many high-risk assets?','Total loan exposure','Financially exposed loan amount','Highest-risk emirate','Top five exposed collateral assets','Missing data records','Unevaluated assets','Effect of rainfall Level 5','Dubai financial exposure','Baseline versus scenario comparison','Data quality','Assessment methodology','Generate a portfolio report'];
+
+function build(){
+ var s=20261110;
+ function r(){s=(s*1664525+1013904223)>>>0;return s/4294967296}
+ var out=[];
+ for(var i=0;i<100;i++){
+  var d=DIST[Math.floor(r()*DIST.length)],ap=r()<0.2,u=r();
+  var st=u<0.6?'Evaluated':u<0.8?'Not Evaluated':'Unknown';
+  var val=+(1+r()*9).toFixed(2),loan=+(val*(0.4+r()*0.4)).toFixed(2);
+  out.push({id:'CCR-'+(1001+i),owner:'DEMO-OWN-'+String(2001+i),type:TYPES[Math.floor(r()*TYPES.length)],em:d[0],dist:d[1],
+    valuationDate:new Date(Date.UTC(2023+Math.floor(r()*4),Math.floor(r()*12),1+Math.floor(r()*27))).toISOString().slice(0,10),
+   lat:+(d[2]+(r()-0.5)*0.012).toFixed(5),lon:+(d[3]+(r()-0.5)*0.012).toFixed(5),
+   acc:ap?'Approximate':'Accurate',status:st,val:val,loan:loan,
+   flood:+r().toFixed(2),heat:+r().toFixed(2),
+   dq:st==='Unknown'?Math.round(20+r()*30):Math.round(60+r()*40)});
+ }
+ return out;
+}
+var DATA=build();
+var S={lv:3,em:'All',q:'',sel:null,tab:'dash',pres:false,ar:false,re:'All',rc:'All',af:'All',theme:'light',collQ:'',collEm:'All',collStatus:'All',log:[],chat:[]};
+var LAST=null,LAST_LV=0,LEAF=null,MARKERS=[];
+
+function $(id){return document.getElementById(id)}
+function fm(n){return Number(n).toFixed(2)}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+function assess(x,lv){
+ if(x.status==='Unknown')return{cat:'Unknown',score:null,why:'Missing or incomplete data. Not scored.'};
+ if(x.status==='Not Evaluated')return{cat:'Not Assessed',score:null,why:'Not evaluated. No risk category assigned.'};
+ var base=100*(0.6*x.flood+0.4*x.heat)+(x.acc==='Approximate'?5:0);
+ var sc=Math.min(100,Math.round(base*MULT[lv-1]));
+ var cat=sc>=65?'High':sc>=35?'Medium':'Low';
+ var why=(cat==='High'?'Elevated':cat==='Medium'?'Moderate':'Low')+' illustrative hazard index'+(x.acc==='Approximate'?'; approximate location':'')+(x.dq<60?'; limited data quality':'');
+ return{cat:cat,score:sc,why:why};
+}
+function summarize(lv){
+ var rows=DATA.map(function(x){return Object.assign({},x,assess(x,lv))});
+ function f(a,k){return a.reduce(function(t,y){return t+y[k]},0)}
+ function c(k){return rows.filter(function(y){return y.cat===k})}
+ return{rows:rows,total:rows.length,val:f(rows,'val'),loan:f(rows,'loan'),
+  high:c('High').length,med:c('Medium').length,low:c('Low').length,na:c('Not Assessed').length,unk:c('Unknown').length,
+  exp:f(c('High'),'loan'),dq:f(rows,'dq')/rows.length,
+  byEm:EM.map(function(e){var a=rows.filter(function(y){return y.em===e}),h=a.filter(function(y){return y.cat==='High'});return{e:e,n:a.length,loan:f(a,'loan'),hn:h.length,exp:f(h,'loan')}})};
+}
+function ranked(rows){return rows.slice().sort(function(a,b){return((b.score==null?-1:b.score)-(a.score==null?-1:a.score))||b.loan-a.loan})}
+
+function answer(q,lv,sel){
+ var s=summarize(lv),t=q.toLowerCase(),h=function(re){return re.test(t)},lab=LVN[lv-1];
+ var chosen=sel?s.rows.find(function(x){return x.id===sel}):null;
+ var idMatch=t.match(/ccr[- ]?\\d{4}/i);
+ if(idMatch){var found=s.rows.find(function(x){return x.id.toLowerCase()===idMatch[0].replace(' ','-').toLowerCase()});if(found){var z=found;return{t:z.id+' | '+z.type+' | '+z.dist+', '+z.em+' | Owner '+z.owner+' | Valuation AED '+fm(z.val)+' M | Loan AED '+fm(z.loan)+' M | Last valuation '+z.valuationDate+' | Status '+z.status+' | Risk '+z.cat+' | Score '+(z.score==null?'n/a':z.score)+'. '+z.why}}}
+ if(chosen&&h(/this|selected|العقار المحدد|الضمان المحدد/))return{t:chosen.id+': '+chosen.type+', '+chosen.dist+'. Owner '+chosen.owner+'. Property value AED '+fm(chosen.val)+' M; loan exposure AED '+fm(chosen.loan)+' M. Last valuation '+chosen.valuationDate+'. '+chosen.cat+' risk.'};
+ if(h(/report|تقرير/))return{t:'Generating the portfolio report for the '+lab+' scenario (Level '+lv+'). Use Download PNG when it appears.',rep:true};
+ if(h(/level ?5|rainfall 5|very high|المستوى 5/)){var f=summarize(5);return{t:'At Level 5 (Very High), '+f.high+' assets would be High risk. Exposed loan: AED '+fm(f.exp)+' M.'}}
+ if(h(/top (5|five)|أعلى 5/))return{t:'Top five by risk score, then loan exposure:\\n'+ranked(s.rows).slice(0,5).map(function(x){return x.id+' ('+x.em+'), score '+(x.score==null?'n/a':x.score)+', loan AED '+fm(x.loan)+' M'}).join('\\n')};
+ if(h(/emirate|إمارة/)&&h(/highest|largest|most|أعلى|أكبر/)){var e=s.byEm.slice().sort(function(a,b){return b.exp-a.exp})[0];return{t:e.e+' has the largest High-risk loan exposure: AED '+fm(e.exp)+' M across '+e.hn+' High-risk assets.'}}
+ var emMatch=EM.find(function(e){return t.includes(e.toLowerCase())});if(emMatch){var d=s.byEm.find(function(x){return x.e===emMatch});return{t:emMatch+': '+d.n+' assets, total loan AED '+fm(d.loan)+' M, High-risk exposed loan AED '+fm(d.exp)+' M.'}}
+ if(h(/missing|incomplete|unknown|ناقص|مفقود/))return{t:s.unk+' assets have unknown or incomplete data. They are not scored and are never treated as low risk.'};
+ if(h(/unevaluated|not evaluated|غير مقيم/))return{t:s.na+' assets are Not Evaluated. They carry no risk category.'};
+ if(h(/method|منهج|formula|معادلة/))return{t:'Score = min(100, round(base × multiplier)), where base = 100 × (0.6 × flood index + 0.4 × heat index), plus 5 for approximate locations. Multipliers: 0.6, 0.8, 1.0, 1.2, 1.4. High ≥ 65, Medium 35–64, Low < 35. Inputs are hypothetical.'};
+ if(h(/compar|baseline|مقارنة/)){var b=summarize(3);return{t:'Baseline Moderate: '+b.high+' High-risk assets, AED '+fm(b.exp)+' M exposed. Current '+lab+': '+s.high+' High-risk, AED '+fm(s.exp)+' M exposed.'}}
+ if(h(/quality|جودة|data quality/))return{t:'Average data quality is '+s.dq.toFixed(1)+'/100. '+s.rows.filter(function(x){return x.dq<60}).length+' records score below 60.'};
+ if(h(/owner|مالك|صاحب/))return{t:'Owner identifiers are fictional. The register includes a demo Owner ID for every collateral record; search the register or ask about a specific CCR asset ID.'};
+ if(h(/date|when|متى|تاريخ/)&&h(/valuation|valued|تقييم/))return{t:'Each fictional asset has a Last Valuation Date field in the Collateral Register. Ask for a specific asset ID (for example CCR-1001) to retrieve its date.'};
+ if(h(/location|where|موقع|أين|اين/))return{t:'The register stores emirate, district and latitude/longitude for every demo collateral asset. Open the UAE map to inspect its approximate marker; coordinates are fictional and not survey-verified.'};
+ if(h(/property type|نوع العقار|types/))return{t:'The demo portfolio contains residential apartments, residential villas, commercial buildings, retail properties, industrial properties and mixed-use properties.'};
+ if(h(/valuation|property value|قيمة العقار|التقييم/))return{t:'Total collateral valuation: AED '+fm(s.val)+' M. Each asset has a fictional last valuation date in the collateral register. Valuation is different from outstanding loan exposure.'};
+ if(h(/exposed|مكشوف/))return{t:'Financially exposed loan (High-risk assets, '+lab+'): AED '+fm(s.exp)+' M. This is outstanding loan amount, not property valuation.'};
+ if(h(/loan|قرض|تعرض ائتماني/))return{t:'Total loan exposure: AED '+fm(s.loan)+' M across '+s.total+' assets. Collateral valuation is AED '+fm(s.val)+' M, a separate measure.'};
+ if(h(/high|عالي|مرتفع/))return{t:s.high+' assets are High risk at the '+lab+' scenario.'};
+ if(h(/total|how many|count|عدد|كم|portfolio|محفظة/))return{t:'The portfolio has '+s.total+' collateral assets across four emirates, with '+s.high+' High, '+s.med+' Medium, '+s.low+' Low, '+s.na+' Not Evaluated and '+s.unk+' Unknown.'};
+ if(h(/hello|hi|مرحبا|السلام عليكم|اهلا/))return{t:S.ar?'مرحبًا! أستطيع تحليل محفظة الضمانات التجريبية، القيم، القروض، المواقع، التقييمات ومؤشرات المخاطر.':'Hello! I can analyze the demo collateral portfolio, values, loans, locations, valuations and risk indicators.'};
+ return{t:S.ar?'أستطيع فهم الأسئلة المفتوحة وتحليل بيانات محفظة العرض، لكن لا أملك اتصالًا بنموذج ذكاء اصطناعي خارجي أو بمصادر إنترنت داخل هذا الملف. اسأل عن عقار باستخدام معرّفه (مثل CCR-1001)، أو عن قيمة الضمانات، القروض، التقييمات، الإمارة، المخاطر أو جودة البيانات. لا أختلق إجابات عن معلومات غير موجودة.':'I can interpret open-ended questions about this demo portfolio, but this standalone file is not connected to an external LLM or live data sources. Ask about an asset by ID (e.g. CCR-1001), collateral values, loans, valuation dates, emirates, risk or data quality. I will not invent facts outside the dataset.'};
+}
+function log(a,asset,d){S.log.unshift({t:new Date().toLocaleTimeString('en-GB'),a:a,asset:asset||'—',d:d||''})}
+function kpi(k){return '<div class="kpi"><span>'+k[0]+'</span><strong>'+k[1]+'</strong></div>'}
+function row2(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>'}
+function renderNav(){
+ $('nav').innerHTML=TABS.map(function(t){return '<button data-t="'+t[0]+'" class="'+(S.tab===t[0]?'on':'')+'" aria-current="'+(S.tab===t[0]?'page':'false')+'">'+(S.ar?t[2]:t[1])+'</button>'}).join('');
+}
+function assetCard(x){
+ return '<strong>'+x.id+'</strong><p class="muted" style="margin:4px 0 8px">'+x.type+' · '+x.dist+', '+x.em+'</p><div class="muted">Record information</div><table>'+
+ [['Loan exposure (AED M)',fm(x.loan)],['Collateral valuation (AED M)',fm(x.val)],['Location accuracy',x.acc],['Data quality',x.dq+'/100'],['Data source','Simulated demo dataset (fictional)']].map(row2).join('')+
+ '</table><div class="muted" style="margin-top:10px">Illustrative assessment (demonstration rules)</div><table>'+
+ [['Assessment status',x.status],['Risk level',x.cat],['Risk score',x.score==null?'n/a':x.score],['Reason',x.why]].map(row2).join('')+'</table>';
+}
+function initLeaflet(){
+ if(typeof L==='undefined'){$('map').innerHTML='<div style="padding:20px">Satellite map needs an internet connection to load Leaflet and imagery.</div>';return}
+ if(LEAF)return;
+ LEAF=L.map('map',{zoomControl:true,scrollWheelZoom:true}).setView([24.45,54.8],7);
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+  attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19
+ }).addTo(LEAF);
+ L.control.scale({metric:true,imperial:false}).addTo(LEAF);
+}
+function renderLeaflet(rows){
+ initLeaflet();if(!LEAF)return;
+ MARKERS.forEach(function(m){LEAF.removeLayer(m)});MARKERS=[];
+ var visible=rows.filter(function(y){return S.em==='All'||y.em===S.em});
+ visible.forEach(function(y){
+  var a=assess(y,S.lv),color=COL[a.cat]||COL.Unknown;
+  var marker=L.circleMarker([y.lat,y.lon],{radius:y.id===S.sel?10:6,color:'#fff',weight:1.5,fillColor:color,fillOpacity:.95})
+   .addTo(LEAF).bindTooltip(y.id+' · '+(S.ar?({'High':'مرتفع','Medium':'متوسط','Low':'منخفض','Unknown':'بيانات غير مكتملة','Not Assessed':'غير مُقيّم'}[a.cat]||a.cat):a.cat));
+  marker.on('click',function(){S.sel=y.id;log('Collateral Selected',y.id,'Opened from satellite map');render()});MARKERS.push(marker);
+ });
+ if(S.em!=='All'){
+  var group=visible.map(function(y){return[y.lat,y.lon]});
+  if(group.length)LEAF.fitBounds(group,{padding:[30,30],maxZoom:13});
+  else LEAF.setView([24.45,54.8],7);
+ }else if(!S.sel)LEAF.setView([24.45,54.8],7);
+ if(S.sel){var selected=visible.find(function(y){return y.id===S.sel});if(selected)LEAF.setView([selected.lat,selected.lon],Math.max(LEAF.getZoom(),14))}
+ setTimeout(function(){if(LEAF)LEAF.invalidateSize()},80);
+}
+function renderCollateral(rows){
+ var q=S.collQ.toLowerCase(),list=rows.filter(function(x){
+  return (S.collEm==='All'||x.em===S.collEm)&&(S.collStatus==='All'||x.status===S.collStatus)&&
+  (!q||[x.id,x.owner,x.dist,x.em,x.type].join(' ').toLowerCase().includes(q));
+ });
+ $('collCount').textContent=(S.ar?'عدد السجلات المعروضة: ':'Showing ')+list.length+' / '+rows.length;
+ var headers=S.ar?['معرّف الضمان','معرّف المالك','نوع العقار','الإمارة','المنطقة','قيمة العقار (مليون درهم)','القرض (مليون درهم)','تاريخ آخر تقييم','خط العرض','خط الطول','حالة التقييم','مستوى المخاطر','درجة المخاطر']:['Collateral ID','Owner ID','Property Type','Emirate','District','Property Value (AED M)','Loan Exposure (AED M)','Last Valuation Date','Latitude','Longitude','Assessment Status','Risk Level','Risk Score'];
+ $('collTable').innerHTML='<thead><tr>'+headers.map(function(h){return'<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+list.map(function(x){
+  var a=assess(x,S.lv);return '<tr><td><button data-asset="'+x.id+'">'+x.id+'</button></td><td>'+x.owner+'</td><td>'+x.type+'</td><td>'+x.em+'</td><td>'+x.dist+'</td><td>'+fm(x.val)+'</td><td>'+fm(x.loan)+'</td><td>'+x.valuationDate+'</td><td>'+x.lat+'</td><td>'+x.lon+'</td><td>'+x.status+'</td><td>'+a.cat+'</td><td>'+(a.score==null?'—':a.score)+'</td></tr>'
+ }).join('')+'</tbody>';
+}
+function exportCSV(){
+ var headers=['Collateral ID','Owner ID','Property Type','Emirate','District','Property Value AED M','Loan Exposure AED M','Last Valuation Date','Latitude','Longitude','Location Accuracy','Assessment Status','Risk Level','Risk Score','Flood Index','Heat Index','Data Quality'];
+ var rows=DATA.map(function(x){var a=assess(x,S.lv);return[x.id,x.owner,x.type,x.em,x.dist,x.val,x.loan,x.valuationDate,x.lat,x.lon,x.acc,x.status,a.cat,a.score==null?'':a.score,x.flood,x.heat,x.dq]});
+ var csv='\\ufeff'+[headers].concat(rows).map(function(r){return r.map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}).join(',')}).join('\\r\\n');
+ var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='CCR_collateral_register_demo.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+ log('CSV Exported','','Exported '+rows.length+' fictional collateral records');
+}
+function renderChat(){
+ $('chat').innerHTML=S.chat.length?S.chat.map(function(m){return '<div class="m '+m.r+'">'+esc(m.t)+'</div>'}).join(''):'<div class="m a">'+(S.ar?'اسأل عن إجمالي الضمانات أو المخاطر أو القروض أو السيناريوهات أو المنهجية.':'Ask about totals, high-risk assets, exposure, scenarios or methodology.')+'</div>';
+ $('chat').scrollTop=1e9;
+}
+function render(){
+ var s=summarize(S.lv),b=summarize(3),lab=LVN[S.lv-1];
+ if(LAST&&LAST_LV!==S.lv){LAST=null;$('prev').style.display='none';$('dl').hidden=true;$('st').textContent='Scenario changed. Generate the report again to include it.'}
+ renderNav();
+ $('kpis').innerHTML=[['Total collateral assets',s.total],['Collateral valuation (AED M)',fm(s.val)],['Total loan exposure (AED M)',fm(s.loan)],['High-risk assets',s.high],['Financially exposed loan (AED M)',fm(s.exp)],['Unevaluated assets',s.na],['Missing data assets',s.unk]].map(kpi).join('');
+ var top=s.byEm.slice().sort(function(a,c){return c.exp-a.exp})[0];
+ $('insight').textContent=top.exp>0?top.e+' carries the largest High-risk loan exposure at AED '+fm(top.exp)+' M under the '+lab+' scenario.':'No assets are High risk under the '+lab+' scenario.';
+ var cats=S.ar?[['مرتفع',s.high],['متوسط',s.med],['منخفض',s.low],['غير مقيّم',s.na],['بيانات غير معروفة',s.unk]]:[['High',s.high],['Medium',s.med],['Low',s.low],['Not Assessed',s.na],['Unknown',s.unk]];
+ $('dist').innerHTML=cats.map(function(c){return '<div class="bar"><span>'+c[0]+'</span><i style="width:'+(c[1]/s.total*100).toFixed(1)+'%;background:'+COL[c[0]]+'"></i><em>'+c[1]+'</em></div>'}).join('');
+ var mx=Math.max.apply(null,s.byEm.map(function(e){return e.loan}))||1;
+ $('byem').innerHTML=s.byEm.map(function(e){return '<div class="bar"><span>'+e.e+'</span><i style="width:'+(e.loan/mx*100).toFixed(1)+'%;background:var(--teal)"></i><em>'+fm(e.loan)+' · exposed '+fm(e.exp)+'</em></div>'}).join('');
+ $('cov').innerHTML='<p class="muted" style="margin:0">Evaluated: '+(s.total-s.na-s.unk)+' · Not evaluated: '+s.na+' · Unknown: '+s.unk+'</p><p class="muted">Average data quality '+s.dq.toFixed(1)+'/100 · records below 60: '+s.rows.filter(function(x){return x.dq<60}).length+'</p>';
+ $('lv').value=S.lv;
+ $('lvtxt').textContent='Level '+S.lv+': '+lab+' (hazard multiplier '+MULT[S.lv-1]+'×). Baseline is Moderate (1.0×).';
+ var dh=s.high-b.high,de=s.exp-b.exp;
+ $('simk').innerHTML=[['Baseline high-risk assets',b.high],['Selected high-risk assets',s.high],['Change in high-risk assets',(dh>0?'+':'')+dh],['Baseline exposed loan (AED M)',fm(b.exp)],['Selected exposed loan (AED M)',fm(s.exp)],['Change in exposed loan (AED M)',(de>=0?'+':'')+fm(de)]].map(kpi).join('');
+ $('simx').textContent='Higher rainfall intensity raises the illustrative hazard multiplier for every evaluated asset, so more assets cross the High threshold (score 65 or more). These are demonstration rules, not flood forecasts.';
+ $('emsel').value=S.em;
+ var mr=s.rows.filter(function(x){return !S.q||x.id.toLowerCase().indexOf(S.q.toLowerCase())>-1});
+ renderLeaflet(mr);
+ var x=S.sel?s.rows.filter(function(y){return y.id===S.sel})[0]:null;
+ $('card').innerHTML=x?assetCard(x):'<span class="muted">'+(S.q&&!mr.length?'No matching records for "'+esc(S.q)+'".':(S.ar?'اختر علامة على الخريطة لعرض تفاصيل الضمان.':'Select a marker to see asset details.'))+'</span>';
+ $('rem').value=S.re;$('rcat').value=S.rc;
+ var fr=ranked(s.rows).filter(function(y){return (S.re==='All'||y.em===S.re)&&(S.rc==='All'||y.cat===S.rc)}).slice(0,10);
+ $('top').innerHTML='<tr><th>Rank</th><th>Collateral ID</th><th>Emirate</th><th>Property type</th><th>Score</th><th>Risk level</th><th>Loan (AED M)</th><th>Valuation (AED M)</th><th>Status</th><th>Data quality</th></tr>'+(fr.length?fr.map(function(y,i){return '<tr'+(i<3?' style="font-weight:600"':'')+'><td>'+(i+1)+'</td><td>'+y.id+'</td><td>'+y.em+'</td><td>'+y.type+'</td><td>'+(y.score==null?'n/a':y.score)+'</td><td>'+y.cat+'</td><td>'+fm(y.loan)+'</td><td>'+fm(y.val)+'</td><td>'+y.status+'</td><td>'+y.dq+'</td></tr>'}).join(''):'<tr><td colspan="10" class="muted">No assets match these filters.</td></tr>');
+ renderChat();
+ $('af').value=S.af;
+ var lg=S.log.filter(function(e){return S.af==='All'||e.a===S.af});
+ $('logt').innerHTML='<tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Related asset</th><th>Details</th></tr>'+(lg.length?lg.map(function(e){return '<tr><td>'+e.t+'</td><td>Demo user</td><td>'+e.a+'</td><td>'+e.asset+'</td><td>'+esc(e.d)+'</td></tr>'}).join(''):'<tr><td colspan="5" class="muted">No events match this filter.</td></tr>');
+}
+function show(t){
+ S.tab=t;
+ document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('on',p.id==='p-'+t)});
+ if(t==='dash')log('Dashboard Viewed');
+ if(t==='map')log('Map Opened');
+ $('stage').textContent='Stage '+(TABS.findIndex(function(x){return x[0]===t})+1)+' of 6';
+ render();
+}
+function step(d){var i=TABS.findIndex(function(x){return x[0]===S.tab});show(TABS[(i+d+TABS.length)%TABS.length][0])}
+function setPres(on){S.pres=on;document.body.classList.toggle('pres',on);if(on)log('Presenter Mode Activated');render()}
+function applyLang(){
+ document.documentElement.lang=S.ar?'ar':'en';document.documentElement.dir=S.ar?'rtl':'ltr';
+ $('ttl').textContent=S.ar?'رادار المخاطر المناخية للضمانات':'Collateral Climate Radar';
+ $('disc').textContent=S.ar?'عرض توضيحي: محفظة وهمية وبيانات مخاطر افتراضية. ليس توقعًا للفيضانات ولا تقييمًا تنظيميًا رسميًا.':'Illustrative demonstration: fictional portfolio and hypothetical hazard data. Not a flood forecast or official regulatory assessment. Designed to align with Central Bank climate financial risk management principles. Formal regulatory compliance requires independent legal and compliance review.';
+ $('lang').textContent=S.ar?'English':'العربية';
+ $('pres').textContent=S.ar?'عرض تقديمي':'Presenter';
+ $('reset').textContent=S.ar?'إعادة ضبط':'Reset';
+ $('gen').textContent=S.ar?'إنشاء تقرير المخاطر':'Generate risk report';
+ $('dl').textContent=S.ar?'تنزيل PNG':'Download PNG';
+ $('send').textContent=S.ar?'إرسال':'Send';
+ $('back').textContent=S.ar?'العودة إلى الإمارات':'Back to UAE';
+}
+function ask(q){
+ if(!q)return;
+ S.chat.push({r:'u',t:q});
+ var a=answer(q,S.lv,S.sel);
+ S.chat.push({r:'a',t:a.t});
+ log('AI Question Submitted','',q);
+ if(a.rep)makeReport();else render();
+}
+function makeReport(){
+ var s=summarize(S.lv),b=summarize(3),lab=LVN[S.lv-1],top=ranked(s.rows).slice(0,5);
+ var c=document.createElement('canvas');c.width=1400;c.height=900;var x=c.getContext('2d');
+ x.fillStyle='#f7f5f0';x.fillRect(0,0,1400,900);
+ x.fillStyle='#14213d';x.font='700 38px sans-serif';x.fillText('CCR — Portfolio Climate Risk Report',60,80);
+ x.fillStyle='#5b6472';x.font='20px sans-serif';
+ x.fillText('Collateral Climate Radar · Generated '+new Date().toLocaleString('en-GB'),60,116);
+ x.fillText('Scenario: Level '+S.lv+' — '+lab+' ('+MULT[S.lv-1]+'× multiplier)',60,146);
+ x.fillStyle='#14213d';x.font='600 22px sans-serif';
+ ['Total collateral assets: '+s.total,'High-risk assets: '+s.high,'Total loan exposure: AED '+fm(s.loan)+' M','Financially exposed loan: AED '+fm(s.exp)+' M','Assessment coverage: '+Math.round((s.total-s.na-s.unk)/s.total*100)+'%','Missing data: '+s.unk+' assets'].forEach(function(t,i){x.fillText(t,60,206+i*38)});
+ x.fillText('Top five exposures',60,440);
+ x.font='18px sans-serif';
+ top.forEach(function(r,i){x.fillText((i+1)+'. '+r.id+'   '+r.em+'   score '+(r.score==null?'n/a':r.score)+'   '+r.cat+'   AED '+fm(r.loan)+' M',60,474+i*30)});
+ x.font='600 22px sans-serif';x.fillText('Scenario analysis',60,650);
+ x.font='18px sans-serif';
+ x.fillText('Baseline (Moderate): '+b.high+' High-risk, AED '+fm(b.exp)+' M exposed',60,682);
+ x.fillText(lab+': '+s.high+' High-risk, AED '+fm(s.exp)+' M exposed',60,712);
+ x.fillText('Data quality: evaluated '+(s.total-s.na-s.unk)+', not evaluated '+s.na+', unknown '+s.unk,60,742);
+ var P=function(lo,la){return[880+(lo-51.5)*94,260+(26.1-la)*97]};
+ x.beginPath();UAE.forEach(function(p,i){var q=P(p[0],p[1]);if(i)x.lineTo(q[0],q[1]);else x.moveTo(q[0],q[1])});x.closePath();x.fillStyle='#e4e9e6';x.fill();x.strokeStyle='#9aa3ad';x.lineWidth=2;x.stroke();
+ s.rows.forEach(function(y){var q=P(y.lon,y.lat);x.beginPath();x.arc(q[0],q[1],4,0,6.2832);x.fillStyle=COL[y.cat];x.fill()});
+ ['Low','Medium','High','Not Assessed','Unknown'].forEach(function(k,i){x.fillStyle=COL[k];x.fillRect(880,600+i*24,12,12);x.fillStyle='#5b6472';x.font='15px sans-serif';x.fillText(k,900,611+i*24)});
+ x.fillStyle='#5b6472';x.font='16px sans-serif';
+ x.fillText('Illustrative Demonstration. Results are based on fictional portfolio data and hypothetical hazard scenarios.',60,840);
+ x.fillText('They do not represent validated property-level flood forecasts or official regulatory assessments.',60,866);
+ LAST=c;LAST_LV=S.lv;
+ $('prev').src=c.toDataURL('image/png');$('prev').style.display='block';
+ $('dl').hidden=false;$('st').textContent='Report ready for Level '+S.lv+'.';
+ log('Report Generated','','Level '+S.lv+', '+s.high+' High-risk assets');
+ render();
+}
+async function dlReport(){
+ if(!LAST)return;
+ var d=null;
+ try{d=window.claude?await window.claude.use('downloads'):null}catch(e){d=null}
+ if(!d){$('st').textContent='Saving is not available in this view. Right-click the preview to save the PNG.';return}
+ try{
+  var blob=await new Promise(function(res){LAST.toBlob(res,'image/png')});
+  await d.save({filename:'CCR-report-level'+LAST_LV+'.png',data:blob});
+  log('Report Downloaded','','PNG, Level '+LAST_LV);$('st').textContent='Report saved.';render();
+ }catch(e){$('st').textContent='Download not completed'+(e&&e.code?' ('+e.code+')':'')+'. The preview is still available.'}
+}
+function setTheme(theme){
+ S.theme=theme;document.documentElement.setAttribute('data-theme',theme);
+ $('theme').textContent=S.ar?(theme==='dark'?'الوضع الفاتح':'الوضع الداكن'):(theme==='dark'?'Light mode':'Dark mode');
+ try{localStorage.setItem('ccr-theme',theme)}catch(e){}
+}
+function reset(){
+ S.lv=3;S.em='All';S.q='';S.sel=null;S.re='All';S.rc='All';S.af='All';S.chat=[];S.log=[];S.pres=false;
+ document.body.classList.remove('pres');LAST=null;
+ $('prev').style.display='none';$('dl').hidden=true;$('st').textContent='';$('q').value='';$('ask').value='';
+ log('Application Reset');show('dash');
+}
+function init(){
+ var eo=EM.map(function(e){return '<option>'+e+'</option>'}).join('');
+ $('emsel').innerHTML='<option value="All">All emirates</option>'+eo;
+ $('rem').innerHTML='<option value="All">All emirates</option>'+eo;
+ $('rcat').innerHTML=['All','High','Medium','Low','Not Assessed','Unknown'].map(function(c){return '<option>'+c+'</option>'}).join('');
+ $('af').innerHTML=['All'].concat(ACTIONS).map(function(a){return '<option>'+a+'</option>'}).join('');
+ $('chips').innerHTML=CHIPS.map(function(c){return '<button data-q="'+esc(c)+'">'+esc(c)+'</button>'}).join('');
+ $('nav').onclick=function(e){var b=e.target.closest('button');if(b)show(b.getAttribute('data-t'))};
+ $('pres').onclick=function(){setPres(!S.pres)};
+ $('pv').onclick=function(){step(-1)};$('nx').onclick=function(){step(1)};
+ $('reset').onclick=reset;
+ $('lang').onclick=function(){S.ar=!S.ar;applyLang();render()};
+ $('lv').oninput=function(){S.lv=+this.value;render()};
+ $('lv').onchange=function(){log('Scenario Updated','','Level '+S.lv+' '+LVN[S.lv-1]);render()};
+ $('emsel').onchange=function(){S.em=this.value;S.sel=null;log('Filter Changed','','Emirate: '+S.em);render()};
+ $('back').onclick=function(){S.em='All';S.sel=null;log('Filter Changed','','Map reset to UAE view');render()};
+ $('q').oninput=function(){S.q=this.value.trim();var h=DATA.filter(function(x){return x.id.toLowerCase()===S.q.toLowerCase()})[0];if(h){S.em=h.em;S.sel=h.id;log('Filter Changed',h.id,'Search matched')}render()};
+ $('map').onclick=function(e){var g=e.target.closest('[data-em]'),m=e.target.closest('.mk');if(g){S.em=g.getAttribute('data-em');S.sel=null;log('Filter Changed','','Zoomed to '+S.em);render()}else if(m){S.sel=m.getAttribute('data-id');log('Collateral Selected',S.sel,'Opened from map');render()}};
+ $('rem').onchange=function(){S.re=this.value;log('Filter Changed','','Risk emirate: '+S.re);render()};
+ $('rcat').onchange=function(){S.rc=this.value;log('Filter Changed','','Risk category: '+S.rc);render()};
+ $('af').onchange=function(){S.af=this.value;render()};
+ $('send').onclick=function(){var v=$('ask').value.trim();$('ask').value='';ask(v)};
+ $('ask').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();$('send').click()}};
+ $('chips').onclick=function(e){var b=e.target.closest('button');if(b)ask(b.getAttribute('data-q'))};
+ $('gen').onclick=function(){makeReport()};
+ $('dl').onclick=dlReport;
+ $('assm').addEventListener('toggle',function(){if(this.open)log('Assumptions Viewed')});
+ document.addEventListener('keydown',function(e){if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='Escape'&&S.pres)setPres(false);if(S.pres&&e.key==='ArrowRight')step(1);if(S.pres&&e.key==='ArrowLeft')step(-1)});
+ applyLang();show('dash');
+}
+if(typeof document!=='undefined'&&document.getElementById('nav'))init();
+</script>
+</body>
+</html>
